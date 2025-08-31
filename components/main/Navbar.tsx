@@ -64,6 +64,12 @@ const Navbar = () => {
             >
               Navigation
             </Link>
+            <Link
+              href="/report-issue"
+              className="text-sm font-medium hover:text-blue-600 transition-all duration-300 ease-in-out transform hover:scale-105 hover:tracking-wider"
+            >
+              Report an Issue
+            </Link>
           </nav>
         </div>
 
