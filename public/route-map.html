@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TOURISTA - Route Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TOURISTA Route Map">
+    <!-- Mappls SDK -->
+    <script src="https://apis.mappls.com/advancedmaps/api/db3a5140-83b1-4fab-bf09-134e9725e57f/map_sdk?layer=vector&v=3.0&callback=initMap1"></script>
+    <script src="https://apis.mappls.com/advancedmaps/api/db3a5140-83b1-4fab-bf09-134e9725e57f/map_sdk_plugins?v=3.0"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f9fafb;
+        }
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .route-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .route-info h3 {
+            margin: 0 0 10px 0;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        .route-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #374151;
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-button:hover {
+            background: #2563eb;
+        }
+        #map {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🗺️ TOURISTA Route</h2>
+        <div class="route-info">
+            <h3>Route Details</h3>
+            <p><strong>From:</strong> <span id="startPoint">Loading...</span></p>
+            <p><strong>To:</strong> <span id="endPoint">Loading...</span></p>
+            <p><strong>Status:</strong> <span id="status">Initializing...</span></p>
+        </div>
+    </div>
+    
+    <a href="/booking" class="back-button">← Back to Booking</a>
+    
+    <div id="map"></div>
+    
+    <div class="loading" id="loading">
+        Loading route map...
+    </div>
+
+    <script>
+        var map, direction_plugin;
+        
+        // Get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+        
+        // Parse coordinates from location names
+        function getCoordinates(locationName) {
+            const coordinates = {
+                'Bhubaneswar': '20.2961,85.8245',
+                'Puri': '19.8133,85.8315',
+                'Cuttack': '20.4625,85.8830',
+                'Konark': '19.8876,86.0945',
+                'Rourkela': '22.2492,84.8828',
+                'Sambalpur': '21.4704,83.9701',
+                'Jagannath Temple': '19.8133,85.8315',
+                'Puri Beach': '19.8233,85.8415',
+                'Konark Sun Temple': '19.8876,86.0945',
+                'Chilika Lake': '19.7000,85.3000'
+            };
+            return coordinates[locationName] || '20.2961,85.8245'; // Default to Bhubaneswar
+        }
+        
+        function initMap1() {
+            // Get parameters from URL
+            var startLocation = getUrlParameter('start') || 'Bhubaneswar';
+            var endLocation = getUrlParameter('end') || 'Puri';
+            
+            // Update display
+            document.getElementById('startPoint').textContent = startLocation;
+            document.getElementById('endPoint').textContent = endLocation;
+            document.getElementById('status').textContent = 'Loading map...';
+            
+            // Get coordinates
+            var startCoords = getCoordinates(startLocation);
+            var endCoords = getCoordinates(endLocation);
+            
+            // Parse coordinates for map center
+            var startLatLng = startCoords.split(',').map(Number);
+            var endLatLng = endCoords.split(',').map(Number);
+            
+            // Calculate center point
+            var centerLat = (startLatLng[0] + endLatLng[0]) / 2;
+            var centerLng = (startLatLng[1] + endLatLng[1]) / 2;
+            
+            // Initialize map
+            map = new mappls.Map('map', {
+                center: [centerLat, centerLng],
+                zoom: 10
+            });
+            
+            map.addListener('load', function() {
+                document.getElementById('status').textContent = 'Calculating route...';
+                
+                var direction_option = {
+                    map: map,
+                    divWidth: '350px',
+                    isDraggable: false,
+                    start: {
+                        label: startLocation,
+                        geoposition: startCoords
+                    },
+                    end: {
+                        label: endLocation,
+                        geoposition: endCoords
+                    },
+                    Profile: ['driving','biking','trucking','walking']
+                };
+                
+                mappls.direction(direction_option, function(data) {
+                    direction_plugin = data;
+                    document.getElementById('status').textContent = 'Route loaded successfully!';
+                    document.getElementById('loading').style.display = 'none';
+                    console.log('Directions loaded:', direction_plugin);
+                });
+            });
+        }
+        
+        // Hide loading after 3 seconds as fallback
+        setTimeout(function() {
+            document.getElementById('loading').style.display = 'none';
+        }, 3000);
+    </script>
+</body>
+</html>
