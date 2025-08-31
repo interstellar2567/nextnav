@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  MapPinIcon, 
-  CameraIcon, 
+import {
+  MapPinIcon,
+  CameraIcon,
   ShieldCheckIcon,
   UserGroupIcon,
   StarIcon,
@@ -13,12 +13,19 @@ import {
   PhoneIcon,
   ChatBubbleLeftRightIcon,
   HeartIcon,
-  BookmarkIcon
+  BookmarkIcon,
+  SpeakerWaveIcon
 } from "@heroicons/react/24/outline";
+import ARVRExperience from "../../components/ar-vr/ARVRExperience";
 
 const DashboardPage = () => {
   const [activeTab, setActiveTab] = useState("trips");
   const [showSOS, setShowSOS] = useState(false);
+  const [showARVR, setShowARVR] = useState(false);
+  const [arvrMode, setArvrMode] = useState<'AR' | 'VR'>('AR');
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const userTrips = [
     {
@@ -191,16 +198,111 @@ const DashboardPage = () => {
                   <p className="text-sm text-gray-600">Going to {traveler.destination} • {traveler.distance}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                   <ChatBubbleLeftRightIcon className="w-4 h-4" />
                 </button>
                 <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                   <HeartIcon className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={() => {
+                    const audio = new Audio(`/audio/${traveler.destination.toLowerCase().replace(/\s+/g, '-')}.mp3`);
+                    audio.play();
+                  }}
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                  title="Play Audiobook"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13" />
+                  </svg>
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* AR/VR Experience Section */}
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">AR/VR Experience</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div
+            onClick={() => {
+              setArvrMode('AR');
+              setShowARVR(true);
+              setSelectedLocation(null);
+            }}
+            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
+          >
+            <div className="flex items-center mb-4">
+              <CameraIcon className="w-6 h-6 text-cyan-600 mr-3" />
+              <h4 className="text-lg font-semibold text-gray-800">AR Experience</h4>
+            </div>
+            <p className="text-gray-600 mb-4">Augmented reality tours</p>
+            <span className="text-blue-600 font-medium">Start AR →</span>
+          </div>
+
+          <div
+            onClick={() => {
+              setArvrMode('VR');
+              setShowARVR(true);
+              setSelectedLocation(null);
+            }}
+            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
+          >
+            <div className="flex items-center mb-4">
+              <EyeIcon className="w-6 h-6 text-indigo-600 mr-3" />
+              <h4 className="text-lg font-semibold text-gray-800">VR Experience</h4>
+            </div>
+            <p className="text-gray-600 mb-4">Virtual reality tours with 360° views</p>
+            <span className="text-blue-600 font-medium">Start VR →</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Audiobooks Section */}
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Audiobooks</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center mb-4">
+              <SpeakerWaveIcon className="w-6 h-6 text-purple-600 mr-3" />
+              <h4 className="text-lg font-semibold text-gray-800">Jagannath Temple Full Story</h4>
+            </div>
+            <p className="text-gray-600 mb-4">Listen to the full story of Jagannath Temple</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (!audio) {
+                    const newAudio = new Audio('/audio/puri.mp3');
+                    newAudio.onended = () => setIsPlaying(false);
+                    setAudio(newAudio);
+                    newAudio.play();
+                    setIsPlaying(true);
+                  } else if (!isPlaying) {
+                    audio.play();
+                    setIsPlaying(true);
+                  }
+                }}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Start Hearing
+              </button>
+              <button
+                onClick={() => {
+                  if (audio && isPlaying) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    setIsPlaying(false);
+                  }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Stop Hearing
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -259,6 +361,36 @@ const DashboardPage = () => {
           <p className="text-gray-600 mb-4">Real-time travel status and updates</p>
           <span className="text-blue-600 font-medium">View Status →</span>
         </a>
+
+        <div
+          onClick={() => {
+            setArvrMode('AR');
+            setShowARVR(true);
+          }}
+          className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
+        >
+          <div className="flex items-center mb-4">
+            <CameraIcon className="w-6 h-6 text-cyan-600 mr-3" />
+            <h4 className="text-lg font-semibold text-gray-800">AR Experience</h4>
+          </div>
+          <p className="text-gray-600 mb-4">Augmented reality tours with audiobooks</p>
+          <span className="text-blue-600 font-medium">Start AR →</span>
+        </div>
+
+        <div
+          onClick={() => {
+            setArvrMode('VR');
+            setShowARVR(true);
+          }}
+          className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
+        >
+          <div className="flex items-center mb-4">
+            <EyeIcon className="w-6 h-6 text-indigo-600 mr-3" />
+            <h4 className="text-lg font-semibold text-gray-800">VR Experience</h4>
+          </div>
+          <p className="text-gray-600 mb-4">Virtual reality tours with 360° views</p>
+          <span className="text-blue-600 font-medium">Start VR →</span>
+        </div>
       </div>
 
       {/* Emergency Quick Access */}
@@ -391,6 +523,27 @@ const DashboardPage = () => {
                 </div>
               </div>
             </motion.div>
+          </div>
+        )}
+
+        {/* AR/VR Experience Modal */}
+        {showARVR && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 z-50">
+            <div className="w-full h-full relative">
+              <button
+                onClick={() => setShowARVR(false)}
+                className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+                aria-label="Close AR/VR Experience"
+              >
+                ✕
+              </button>
+              <ARVRExperience
+                isOpen={showARVR}
+                onClose={() => setShowARVR(false)}
+                mode={arvrMode}
+                location={selectedLocation}
+              />
+            </div>
           </div>
         )}
       </div>

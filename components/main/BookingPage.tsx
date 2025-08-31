@@ -39,6 +39,7 @@ const BookingPage = () => {
   const [showMap, setShowMap] = useState(false); // Hide map by default
   const [showAR, setShowAR] = useState(false);
   const [showVR, setShowVR] = useState(false);
+  const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
 
   // Mock nearby places data
@@ -412,6 +413,16 @@ const BookingPage = () => {
                            <button
                              onClick={() => {
                                setDestination(place.name);
+                               // Map place names to video IDs
+                               let videoId = 1; // Default to Konark
+                               if (place.name.includes('Puri') || place.name.includes('Jagannath')) {
+                                 videoId = 2; // Puri Temple Video
+                               } else if (place.name.includes('Konark')) {
+                                 videoId = 1; // Konark Temple Video
+                               } else if (place.name.includes('Lingraj') || place.name.includes('Chilika')) {
+                                 videoId = 3; // Lingraj Temple Video
+                               }
+                               setSelectedVideoId(videoId);
                                setShowAR(true);
                              }}
                              className="bg-purple-600 text-white px-3 py-1 rounded text-xs hover:bg-purple-700 transition-colors"
@@ -432,8 +443,12 @@ const BookingPage = () => {
       {/* AR/VR Experience Modal */}
       <ARVRExperience
         isOpen={showAR}
-        onClose={() => setShowAR(false)}
+        onClose={() => {
+          setShowAR(false);
+          setSelectedVideoId(null);
+        }}
         mode="AR"
+        selectedVideoId={selectedVideoId}
         location={destination ? {
           name: destination,
           coordinates: [19.8133, 85.8315],
